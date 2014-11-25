@@ -4,8 +4,8 @@
  */
 package vn.edu.designglobal.resources;
 
-import java.awt.Image;
-import java.io.ByteArrayInputStream;
+import java.awt.*;
+import java.io.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +35,6 @@ public class FlowerService {
      */
     @WebMethod(operationName = "getFlower")
     public Image getFlower(@WebParam(name = "name") String name) throws IOException {
-        //TODO write your implementation code here:
         byte[] bytes = getFlowerBytes(name);
         return getImage(bytes, false);
     }
@@ -45,24 +44,24 @@ public class FlowerService {
      */
     @WebMethod(operationName = "getThumbnails")
     public List<Image> getThumbnails() throws IOException {
-        List<byte[]>flowers = allFlowers();
-        List<Image>flowerList = new ArrayList<Image>(flowers.size());
-        for (byte[]flower:flowers) {
+        List<byte[]> flowers = allFlowers();
+        List<Image> flowerList = new ArrayList<Image>(flowers.size());
+        for (byte[] flower : flowers) {
             flowerList.add(getImage(flower, true));
         }
         return flowerList;
     }
     
     private byte[] getFlowerBytes(String name) throws IOException {
-        URL resource = this.getClass().getResource("/org/flower/resources/" +name+".jpg");
+        URL resource = this.getClass().getResource("/org/flower/resources/" + name + ".jpg");
         return getBytes(resource);
     }
 
     private byte[] getBytes(URL resource) throws IOException {
         InputStream in = resource.openStream();
-        ByteArrayOutStream bos = new ByteArrayOutStream();
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
         byte[] buf = new byte[1024];
-        for(int read; (read = in.read(buf)) !=-1;) {
+        for (int read; (read = in.read(buf)) != -1;) {
             bos.write(buf, 0, read);
         }
         return bos.toByteArray();
@@ -70,40 +69,26 @@ public class FlowerService {
     
     private Image getImage(byte[] bytes, boolean isThumbnail) throws IOException {
         ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-        Object source = bis;
-        ImageInputStream iis = ImageIO.createImageInputStream(source);
-        Iterator readers = ImageIO.getImageReadersByFormatName("jpg");
+        Iterator readers = ImageIO.getImageReadersByFormatName("jpeg");
         ImageReader reader = (ImageReader) readers.next();
+        Object source = bis; // File or InputStream
+        ImageInputStream iis = ImageIO.createImageInputStream(source);
+        reader.setInput(iis, true);
         ImageReadParam param = reader.getDefaultReadParam();
         if (isThumbnail) {
             param.setSourceSubsampling(4, 4, 0, 0);
         }
-        reader.setInput(iis, true);
         return reader.read(0, param);
     }
     
-    private static final String[] FLOWERS = {"Nara1", "Nara2", "Nara3"};
+    private static final String[] FLOWERS = {"Nara1", "Nara3"};
     
     private List allFlowers() throws IOException {
-        List flowers = new ArrayList();
-        for (String flower:FLOWERS) {
-            URL resource = this.getClass().getResource("/org/flower/resources/"+flower+".jpg");
+        List<byte[]> flowers = new ArrayList();
+        for (String flower : FLOWERS) {
+            URL resource = this.getClass().getResource("/flower/album/resources/" + flower + ".jpg");
             flowers.add(getBytes(resource));
         }
         return flowers;
-    }
-
-    private static class ByteArrayOutStream {
-
-        public ByteArrayOutStream() {
-        }
-
-        private void write(byte[] buf, int i, int read) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-        private byte[] toByteArray() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 }
